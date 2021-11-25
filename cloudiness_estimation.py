@@ -4,7 +4,7 @@ import pandas as pd
 #%%
 # load the training_data.csv using the pandas.read_csv() function with UTF-8 encoding
 # and assign the result to the variable training_data
-training_data = pd.read_csv('training_data_clean.csv', encoding='ISO-8859-1')
+training_data = pd.read_csv('training_data_clean_fullDate.csv', encoding='ISO-8859-1')
 
 
 #%% (task-specific cleaning)
