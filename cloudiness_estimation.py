@@ -4,15 +4,25 @@ import pandas as pd
 #%%
 # load the training_data.csv using the pandas.read_csv() function with UTF-8 encoding
 # and assign the result to the variable training_data
-training_data = pd.read_csv('training_data_clean.csv', encoding='ISO-8859-1')
+training_data = pd.read_csv('training_data_clean_fullDate.csv', encoding='ISO-8859-1')
 
+# drop the AVERAGE_RAIN feature from the training_data
+training_data = training_data.drop('AVERAGE_RAIN', axis = 1)
+
+#%% check how many rows contain missing values in the AVERAGE_CLOUDINESS feature
+training_data.AVERAGE_CLOUDINESS.isnull().sum()
+
+# take all the rows that contain missing values in the AVERAGE_CLOUDINESS feature and put them in a new dataframe
+training_data_missing_cloudiness = training_data[training_data.AVERAGE_CLOUDINESS.isnull()]
+
+#drop the AVERAGE_CLOUDINESS feature from the training_data_missing_cloudiness dataframe
+training_data_missing_cloudiness = training_data_missing_cloudiness.drop(['AVERAGE_CLOUDINESS'], axis=1)
 
 #%% (task-specific cleaning)
 # drop all the rows where AVERAGE_CLOUDINESS is null
 training_data = training_data.dropna(subset = ['AVERAGE_CLOUDINESS'])
 
-# drop the AVERAGE_RAIN feature from the training_data
-training_data = training_data.drop('AVERAGE_RAIN', axis = 1)
+
 
 #%%use k-neighbors classification in KNeighborsClassifier to predict the AVERAGE_CLOUDINESS feature
 from sklearn.neighbors import KNeighborsClassifier
@@ -90,4 +100,28 @@ svm_cv.fit(X_train, y_train)
 
 print(svm_cv.best_params_)
 print(svm_cv.best_score_)
-# %%
+# %% use the best parameters to train a new decision tree classifier
+from sklearn.tree import DecisionTreeClassifier
+
+tree_model = DecisionTreeClassifier(max_depth = 7)
+tree_model.fit(X_train, y_train)
+
+#%% print training_data_missing_cloudiness
+print(training_data_missing_cloudiness.info())
+#%% use tree_model to predict the AVERAGE_CLOUDINESS feature of training_data_missing_cloudiness and put the result in a new dataframe
+training_data_missing_cloudiness['AVERAGE_CLOUDINESS'] = tree_model.predict(training_data_missing_cloudiness)
+# %% concatenate training_data_missing_cloudiness and training_data
+training_data = pd.concat([training_data, training_data_missing_cloudiness])
+
+# %% print the number of elements of training_data
+print(len(training_data))
+# %% export the training_data to a csv file
+training_data.to_csv('training_data_clean_fullDate_with_predictions.csv', index = False)
+
+# %% now we create a IDENTIFIER feature in the training_data dataframe, which is created by concatenating the YEAR, MONTH, DAY, HOUR, MINUTE and SECOND features, each as a string
+training_data['IDENTIFIER'] = training_data['YEAR'].astype(str) + '-' + training_data['MONTH'].astype(str) + '-' + training_data['DAY'].astype(str) + '-' + training_data['HOUR'].astype(str) + '-' + training_data['MINUTE'].astype(str) + '-' + training_data['SECOND'].astype(str)
+
+# %% export the training_data to a csv file
+training_data.to_csv('training_data_clean_fullDate_with_predictions_and_identifier.csv', index = False)
+
+# %% 
