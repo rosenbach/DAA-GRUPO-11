@@ -1,4 +1,4 @@
-#%%
+#%% import pandas
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
@@ -6,6 +6,23 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVC
+
+training_data = pd.read_csv('./parallel_data/training_data_FULL_w.csv')
+
+#train a 
+# %% print the colnames of training_data
+print(training_data.columns)
+# %% drop the AVERAGE_SPEED_DIFF_y column
+training_data = training_data.drop(['AVERAGE_SPEED_DIFF_y'], axis=1)
+#rename the AVERAGE_SPEED_DIFF_x column to AVERAGE_SPEED_DIFF
+training_data = training_data.rename(columns={'AVERAGE_SPEED_DIFF_x': 'AVERAGE_SPEED_DIFF'})
+#print the number of rows
+print(training_data.shape[0])
+
+#%%drop the 'Unnamed: 0' column
+training_data = training_data.drop(['Unnamed: 0'], axis=1)
+
+# %% 
 
 param_grid_svm = [
   {'C': [1,3,5,7,9,11]}
@@ -18,29 +35,7 @@ param_grid_dt = [
   {'max_depth': [1,3,5,7,9,11]}
 ]
 
-param_grid_lr = [
-        {'fit_intercept': [True, False],
-         'normalize': [True, False],
-         'copy_X': [True, False],
-         'n_jobs': [-1],
-         'max_iter': [100, 500, 1000, 1500],
-         }
-]
 
-
-# load the training_data.csv using the pandas.read_csv() function with UTF-8 encoding
-# and assign the result to the variable training_data
-training_data = pd.read_csv('test_data_clean_lookup.csv', encoding='ISO-8859-1')
-
-#find all the columns in training_data that contain missing values
-missing_cols = training_data.columns[training_data.isnull().any()].tolist()
-
-# remove the identifier column from the training_data
-training_data = training_data.drop('IDENTIFIER', axis = 1)
-
-
-#%%print the data types of training_data columns
-print(training_data.dtypes)
 
 #%%
 def create_models(data, feature):
@@ -76,6 +71,49 @@ def create_models(data, feature):
 
     #return models
     return models
+
+
+#%% create a decision tree with a gridsearchcv to find the best parameters for the model
+models = create_models(training_data, "AVERAGE_SPEED_DIFF")
+
+#%% get the best performing model
+best_model = max(models, key=lambda x: x.best_score_)
+
+#%% now load the test_data 
+test_data = pd.read_csv('./parallel_data/test_data_FULL.csv')
+#sort by the 'Unnamed: 0' column
+test_data = test_data.sort_values(by=['Unnamed: 0'])
+#remove the IDENTIFIER Column
+test_data = test_data.drop(['IDENTIFIER'], axis=1)
+
+predictions = best_model.predict(test_data.drop(['Unnamed: 0'], axis=1))
+
+#create a new "AVERAGE_SPEED_DIFF" column in the test_data 
+test_data['AVERAGE_SPEED_DIFF'] = predictions
+
+#rename the "Unnamed: 0" column to RowId
+test_data = test_data.rename(columns={'Unnamed: 0': 'RowId'})
+
+#add 1 to each element of the RowId
+test_data['RowId'] = test_data['RowId'] + 1
+
+#only keep RowId and AVERAGE_SPEED_DIFF
+test_data = test_data[['RowId', 'AVERAGE_SPEED_DIFF']]
+
+#map AVERAGE_SPEED_DIFF to "None", "Low", "Medium", "High", "Very_High"
+test_data['AVERAGE_SPEED_DIFF'] = test_data['AVERAGE_SPEED_DIFF'].map({0: "None", 1: "Low", 2: "Medium", 3: "High", 4: "Very_High"})
+
+#rename AVERAGE_SPEED_DIFF to Speed_Diff
+test_data = test_data.rename(columns={'AVERAGE_SPEED_DIFF': 'Speed_Diff'})
+
+#%%export the test_data to a csv file
+test_data.to_csv('./parallel_data/results_full.csv', index=False)
+
+#%%print info about the test_data
+print(test_data.info())
+
+#
+
 
 #%%
 def estimate_feature(data, feature):
@@ -133,3 +171,4 @@ for feature in missing_cols:
     estimate_feature(training_data, feature)
 
 # %%
+

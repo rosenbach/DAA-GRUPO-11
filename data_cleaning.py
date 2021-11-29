@@ -98,3 +98,8 @@ data['AVERAGE_CLOUDINESS'] = data['AVERAGE_CLOUDINESS'].map(cloud_dict)
 
 #%% export the data to a csv file called data_cleaned_1.csv
 data.to_csv('test_data_clean_lookup.csv', index = False)
+
+#%% print the unique elements of AVERAGE_RAIN
+data.info()
+print(data['AVERAGE_RAIN'].unique())
+# %%
