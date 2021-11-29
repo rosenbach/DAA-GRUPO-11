@@ -72,6 +72,29 @@ def create_models(data, feature):
     #return models
     return models
 
+#%% get the name of the first column
+col_name = training_data.columns[0]
+
+#remove col_name from training_data
+training_data = training_data.drop(col_name, axis = 1)
+
+
+training_data.insert(0, 'IS_STORMY1', training_data['IS_STORMY'])
+
+#%%swap the first and the second column
+training_data = training_data[training_data.columns[::-1]]
+
+#%%delete the IS_STORMY feature
+training_data = training_data.drop(['IS_STORMY'], axis = 1)
+
+#rename the IS_STORMY1 feature to IS_STORMY
+training_data = training_data.rename(columns={'IS_STORMY1': 'IS_STORMY'})
+
+
+
+#%% export the training_data to FINAL
+training_data.to_csv("training_data_FINAL.csv", encoding='ISO-8859-1')
+
 
 #%% create a decision tree with a gridsearchcv to find the best parameters for the model
 models = create_models(training_data, "AVERAGE_SPEED_DIFF")
