@@ -30,3 +30,23 @@ knn_cv.fit(X_train, y_train)
 print(knn_cv.best_params_)
 print(knn_cv.best_score_)
 
+
+# %% run a gridsearch to find the best parameters for the decision tree model
+from sklearn.model_selection import GridSearchCV
+dt = DecisionTreeClassifier()
+param_grid = {'max_depth': [1, 3, 5, 7, 9, 11, 13, 15]}
+dt_cv = GridSearchCV(dt, param_grid, cv=5)
+dt_cv.fit(X_train, y_train)
+print(dt_cv.best_params_)
+print(dt_cv.best_score_)
+
+# %%  run a gridsearch to find the best parameters for the svm model
+from sklearn.model_selection import GridSearchCV
+svm = SVC()
+param_grid = {'C': [1, 3, 5, 7, 9, 11, 13, 15]}
+svm_cv = GridSearchCV(svm, param_grid, cv=5)
+svm_cv.fit(X_train, y_train)
+print(svm_cv.best_params_)
+print(svm_cv.best_score_)
+
+# %%
