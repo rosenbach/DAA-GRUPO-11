@@ -40,4 +40,13 @@ y_pred = knn.predict(X_test)
 from sklearn.metrics import accuracy_score
 print(accuracy_score(y_test, y_pred))
 
-# %%
+# %% run a gridsearch to find the best parameters
+from sklearn.model_selection import GridSearchCV
+param_grid = {'n_neighbors': [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21]}
+knn = KNeighborsClassifier()
+grid = GridSearchCV(knn, param_grid, cv=5)
+grid.fit(X_train, y_train)
+# %% print the best parameters and the best score
+print('Best Params:', grid.best_params_)
+print('Best Score:', grid.best_score_)
+
